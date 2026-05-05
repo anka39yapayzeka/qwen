@@ -63,6 +63,7 @@ jobs:
         with:
           name: ${{ inputs.project_id }}-apk
           path: projects/${{ inputs.project_id }}/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
 
       - name: Upload AAB artifact
         if: ${{ inputs.build_type == 'aab' }}
@@ -70,3 +71,4 @@ jobs:
         with:
           name: ${{ inputs.project_id }}-aab
           path: projects/${{ inputs.project_id }}/android/app/build/outputs/bundle/debug/app-debug.aab
+          retention-days: 90
