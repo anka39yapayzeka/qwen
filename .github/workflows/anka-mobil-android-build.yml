@@ -15,13 +15,28 @@ on:
           - apk
           - aab
 
+concurrency:
+  group: anka-mobil-${{ inputs.project_id }}-${{ inputs.build_type }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     name: Build ${{ inputs.project_id }} (${{ inputs.build_type }})
+    env:
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.incremental=false'
+      EXPO_NO_TELEMETRY: '1'
+      CI: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -33,42 +48,73 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: projects/${{ inputs.project_id }}/package-lock.json
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ inputs.project_id }}-${{ hashFiles(format('projects/{0}/package-lock.json', inputs.project_id), format('projects/{0}/package.json', inputs.project_id)) }}
+          restore-keys: |
+            npm-${{ runner.os }}-${{ inputs.project_id }}-
+            npm-${{ runner.os }}-
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install deps
         working-directory: projects/${{ inputs.project_id }}
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
 
       - name: Expo prebuild (android)
         working-directory: projects/${{ inputs.project_id }}
         run: npx expo prebuild --platform android --non-interactive
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          gradle-home-cache-cleanup: true
+
       - name: Build APK (debug)
         if: ${{ inputs.build_type == 'apk' }}
         working-directory: projects/${{ inputs.project_id }}/android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Build AAB (debug)
         if: ${{ inputs.build_type == 'aab' }}
         working-directory: projects/${{ inputs.project_id }}/android
-        run: ./gradlew bundleDebug
+        run: ./gradlew bundleDebug --stacktrace --no-daemon
 
       - name: Upload APK artifact
         if: ${{ inputs.build_type == 'apk' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.project_id }}-apk
+          name: ${{ inputs.project_id }}-apk-${{ github.run_number }}
           path: projects/${{ inputs.project_id }}/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
           retention-days: 90
 
       - name: Upload AAB artifact
         if: ${{ inputs.build_type == 'aab' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.project_id }}-aab
+          name: ${{ inputs.project_id }}-aab-${{ github.run_number }}
           path: projects/${{ inputs.project_id }}/android/app/build/outputs/bundle/debug/app-debug.aab
+          if-no-files-found: error
           retention-days: 90
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.project_id }}-${{ inputs.build_type }}-logs-${{ github.run_number }}
+          path: |
+            projects/${{ inputs.project_id }}/android/app/build/reports/**
+            projects/${{ inputs.project_id }}/android/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 14
