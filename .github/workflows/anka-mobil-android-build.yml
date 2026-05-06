@@ -74,6 +74,21 @@ jobs:
         working-directory: projects/${{ inputs.project_id }}
         run: npx expo prebuild --platform android --non-interactive
 
+      - name: Pin Kotlin version (Compose compiler compat)
+        working-directory: projects/${{ inputs.project_id }}/android
+        run: |
+          set -e
+          KEY='android.kotlinVersion'
+          VAL='1.9.25'
+          touch gradle.properties
+          if grep -q "^${KEY}=" gradle.properties; then
+            sed -i "s|^${KEY}=.*|${KEY}=${VAL}|" gradle.properties
+          else
+            printf '\n%s=%s\n' "${KEY}" "${VAL}" >> gradle.properties
+          fi
+          echo '--- kotlin/compose related properties ---'
+          grep -Ei 'kotlin|compose' gradle.properties || true
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
