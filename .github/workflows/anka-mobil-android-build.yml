@@ -82,36 +82,68 @@ jobs:
           grep -n 'kotlinVersion\|kotlin_version\|KOTLIN' build.gradle || true
 
           python3 - <<'PYEOF'
-          import re, sys
+          import re
+
+          target = "1.9.24"
 
           with open('build.gradle', 'r') as f:
               content = f.read()
+          original_bg = content
 
-          original = content
-
-          # ext { kotlinVersion = "1.9.25" }  veya  kotlinVersion = '1.9.25'
+          # Expo/RN şablonu: kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
+          content = re.sub(
+              r"(findProperty\(\s*['\"]android\.kotlinVersion['\"]\s*\)\s*\?:\s*)['\"]1\.9\.25['\"]",
+              rf"\g<1>'{target}'",
+              content,
+          )
+          # Düz atama: kotlinVersion = "1.9.25"
           content = re.sub(
               r'(kotlinVersion\s*=\s*)["\']1\.9\.25["\']',
-              r'\g<1>"1.9.24"',
-              content
+              rf'\g<1>"{target}"',
+              content,
           )
-          # kotlin_version = "1.9.25" şekli
           content = re.sub(
               r'(kotlin_version\s*=\s*)["\']1\.9\.25["\']',
-              r'\g<1>"1.9.24"',
-              content
+              rf'\g<1>"{target}"',
+              content,
           )
 
-          changed = content != original
           with open('build.gradle', 'w') as f:
               f.write(content)
+          print(f'build.gradle changed: {content != original_bg}')
 
-          print(f'build.gradle patched: {changed}')
-          if not changed:
-              print('WARNING: pattern not found — printing kotlinVersion lines:')
-              for i, line in enumerate(content.splitlines(), 1):
-                  if 'kotlin' in line.lower():
-                      print(f'  {i}: {line}')
+          # gradle.properties: findProperty bunu okur — en güvenilir pin
+          props_path = 'gradle.properties'
+          try:
+              with open(props_path, 'r') as f:
+                  props = f.read()
+          except FileNotFoundError:
+              props = ''
+          original_gp = props
+          key = 'android.kotlinVersion'
+          line = f'{key}={target}'
+          if re.search(rf'^{re.escape(key)}=', props, flags=re.MULTILINE):
+              props = re.sub(
+                  rf'^{re.escape(key)}=.*$',
+                  line,
+                  props,
+                  flags=re.MULTILINE,
+              )
+          else:
+              props = props.rstrip() + '\n' + line + '\n'
+          with open(props_path, 'w') as f:
+              f.write(props)
+          print(f'gradle.properties changed: {props != original_gp}')
+          print('--- gradle.properties (kotlin) ---')
+          for ln in props.splitlines():
+              if 'kotlin' in ln.lower():
+                  print(ln)
+
+          if content == original_bg and props == original_gp:
+              print('WARNING: hiçbir değişiklik yapılamadı — build.gradle kotlin satırları:')
+              for i, ln in enumerate(content.splitlines(), 1):
+                  if 'kotlin' in ln.lower():
+                      print(f'  {i}: {ln}')
           PYEOF
 
           echo '--- android/build.gradle after patch ---'
