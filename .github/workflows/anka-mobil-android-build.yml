@@ -74,20 +74,25 @@ jobs:
         working-directory: projects/${{ inputs.project_id }}
         run: npx expo prebuild --platform android --non-interactive
 
-      - name: Pin Kotlin version (Compose compiler compat)
-        working-directory: projects/${{ inputs.project_id }}/android
+      - name: Patch Compose Compiler version (Expo SDK 52 + RN 0.76 Kotlin compat fix)
+        working-directory: projects/${{ inputs.project_id }}
         run: |
-          set -e
-          KEY='android.kotlinVersion'
-          VAL='1.9.25'
-          touch gradle.properties
-          if grep -q "^${KEY}=" gradle.properties; then
-            sed -i "s|^${KEY}=.*|${KEY}=${VAL}|" gradle.properties
-          else
-            printf '\n%s=%s\n' "${KEY}" "${VAL}" >> gradle.properties
-          fi
-          echo '--- kotlin/compose related properties ---'
-          grep -Ei 'kotlin|compose' gradle.properties || true
+          set -eu
+          OLD_COMPOSE='1.5.15'
+          NEW_COMPOSE='1.5.14'
+
+          echo '--- Searching node_modules for Compose Compiler version pins ---'
+          for f in $(grep -rln "kotlinCompilerExtensionVersion" node_modules 2>/dev/null || true); do
+            echo "before: $f"
+            grep -nE "kotlinCompilerExtensionVersion" "$f" || true
+            sed -i "s/kotlinCompilerExtensionVersion[[:space:]]*=*[[:space:]]*'${OLD_COMPOSE}'/kotlinCompilerExtensionVersion '${NEW_COMPOSE}'/g" "$f"
+            sed -i "s/kotlinCompilerExtensionVersion[[:space:]]*=*[[:space:]]*\"${OLD_COMPOSE}\"/kotlinCompilerExtensionVersion \"${NEW_COMPOSE}\"/g" "$f"
+            echo "after:  $f"
+            grep -nE "kotlinCompilerExtensionVersion" "$f" || true
+          done
+
+          echo '--- Effective values after patch ---'
+          grep -rEn "kotlinCompilerExtensionVersion" node_modules/expo-modules-core/android/build.gradle 2>/dev/null || echo "(expo-modules-core build.gradle not found)"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
