@@ -74,25 +74,48 @@ jobs:
         working-directory: projects/${{ inputs.project_id }}
         run: npx expo prebuild --platform android --non-interactive
 
-      - name: Patch Compose Compiler version (Expo SDK 52 + RN 0.76 Kotlin compat fix)
-        working-directory: projects/${{ inputs.project_id }}
+      - name: Patch rootProject.ext.kotlinVersion (Expo SDK 52 + RN 0.76 Kotlin compat fix)
+        working-directory: projects/${{ inputs.project_id }}/android
         run: |
           set -eu
-          OLD_COMPOSE='1.5.15'
-          NEW_COMPOSE='1.5.14'
+          echo '--- android/build.gradle before patch ---'
+          grep -n 'kotlinVersion\|kotlin_version\|KOTLIN' build.gradle || true
 
-          echo '--- Searching node_modules for Compose Compiler version pins ---'
-          for f in $(grep -rln "kotlinCompilerExtensionVersion" node_modules 2>/dev/null || true); do
-            echo "before: $f"
-            grep -nE "kotlinCompilerExtensionVersion" "$f" || true
-            sed -i "s/kotlinCompilerExtensionVersion[[:space:]]*=*[[:space:]]*'${OLD_COMPOSE}'/kotlinCompilerExtensionVersion '${NEW_COMPOSE}'/g" "$f"
-            sed -i "s/kotlinCompilerExtensionVersion[[:space:]]*=*[[:space:]]*\"${OLD_COMPOSE}\"/kotlinCompilerExtensionVersion \"${NEW_COMPOSE}\"/g" "$f"
-            echo "after:  $f"
-            grep -nE "kotlinCompilerExtensionVersion" "$f" || true
-          done
+          python3 - <<'PYEOF'
+          import re, sys
 
-          echo '--- Effective values after patch ---'
-          grep -rEn "kotlinCompilerExtensionVersion" node_modules/expo-modules-core/android/build.gradle 2>/dev/null || echo "(expo-modules-core build.gradle not found)"
+          with open('build.gradle', 'r') as f:
+              content = f.read()
+
+          original = content
+
+          # ext { kotlinVersion = "1.9.25" }  veya  kotlinVersion = '1.9.25'
+          content = re.sub(
+              r'(kotlinVersion\s*=\s*)["\']1\.9\.25["\']',
+              r'\g<1>"1.9.24"',
+              content
+          )
+          # kotlin_version = "1.9.25" şekli
+          content = re.sub(
+              r'(kotlin_version\s*=\s*)["\']1\.9\.25["\']',
+              r'\g<1>"1.9.24"',
+              content
+          )
+
+          changed = content != original
+          with open('build.gradle', 'w') as f:
+              f.write(content)
+
+          print(f'build.gradle patched: {changed}')
+          if not changed:
+              print('WARNING: pattern not found — printing kotlinVersion lines:')
+              for i, line in enumerate(content.splitlines(), 1):
+                  if 'kotlin' in line.lower():
+                      print(f'  {i}: {line}')
+          PYEOF
+
+          echo '--- android/build.gradle after patch ---'
+          grep -n 'kotlinVersion\|kotlin_version\|KOTLIN' build.gradle || true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
