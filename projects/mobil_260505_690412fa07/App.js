@@ -1,5 +1,3 @@
-Evet, arama, not düzenleme, renk etiketleri, göreceli tarih, karakter sayacı, renkli çizgiler ve klavye yönetimi gibi birçok özellik ekleyerek çok daha işlevsel ve modern bir sürüm hazırlayabiliriz. İşte tek dosya olarak tamamlanmış hali:
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
