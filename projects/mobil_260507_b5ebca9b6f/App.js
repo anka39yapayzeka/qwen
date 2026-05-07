@@ -1,35 +1,227 @@
-), titles, or Turkish sentences before or after the code.
-    *   Constraint 3: Must not start with "Yes", "Here", "Below", etc. The first semantic line must be code (usually `import`).
-    *   Constraint 4: `export default` containing a full App component is mandatory.
-    *   Constraint 5: No text outside the code, even a single letter.
-    *   User Request: Simple Notepad app.
-    *   Internal Analysis (provided in prompt): Use `AsyncStorage`, `FlatList`, `useState`, `useEffect`, `SafeAreaView`, `TextInput`, `TouchableOpacity`. Handle empty inputs, data persistence, and basic styling.
+import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  Alert
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-    *   Imports: `React`, `useState`, `useEffect` from `react`; `StyleSheet`, `Text`, `View`, `TextInput`, `TouchableOpacity`, `FlatList`, `SafeAreaView`, `KeyboardAvoidingView`, `Platform`, `Alert` from `react-native`; `AsyncStorage` from `@react-native-async-storage/async-storage`.
-    *   State: `notes` (array), `text` (string).
-    *   Functions:
-        *   `loadNotes`: Fetch from AsyncStorage on mount.
-        *   `saveNotes`: Save current `notes` state to AsyncStorage.
-        *   `addNote`: Validate `text.trim()`, create object `{id: Date.now().toString(), text}`, update state, save.
-        *   `deleteNote`: Filter by id, update state, save.
-    *   UI:
-        *   `SafeAreaView` wrapper.
-        *   Header.
-        *   Input section (TextInput + Add Button).
-        *   FlatList for notes.
-        *   Empty state message.
-    *   Styling: Modern, clean, using `StyleSheet`.
+export default function App() {
+  const [notes, setNotes] = useState([]);
+  const [inputText, setInputText] = useState('');
 
-    *   Ensure no markdown fences.
-    *   Ensure no introductory text.
-    *   Ensure `export default App`.
+  // Uygulama başladığında notları yükle
+  useEffect(() => {
+    loadNotes();
+  }, []);
 
-    *   *Self-Correction during drafting:* I must remember that `@react-native-async-storage/async-storage` is the standard for Expo now, not the deprecated `AsyncStorage` from `react-native`.
+  const loadNotes = async () => {
+    try {
+      const savedNotes = await AsyncStorage.getItem('@my_notes');
+      if (savedNotes !== null) {
+        setNotes(JSON.parse(savedNotes));
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Notlar yüklenirken bir sorun oluştu.');
+    }
+  };
 
-    *   `import React, { useState, useEffect } from 'react';`
-    *   `import { ... } from 'react-native';`
-    *   `import AsyncStorage from '@react-native-async-storage/async-storage';`
-    *   `const App = () => { ... }`
-    *   `export default App;`
+  const saveNotes = async (newNotes) => {
+    try {
+      await AsyncStorage.setItem('@my_notes', JSON.stringify(newNotes));
+    } catch (error) {
+      Alert.alert('Hata', 'Notlar kaydedilemedi.');
+    }
+  };
 
-    *   Check: No
+  const handleAddNote = () => {
+    const trimmedText = inputText.trim();
+    if (trimmedText === '') {
+      Alert.alert('Uyarı', 'Lütfen bir not giriniz.');
+      return;
+    }
+
+    const newNote = {
+      id: Date.now().toString(),
+      text: trimmedText,
+      date: new Date().toLocaleString(),
+    };
+
+    const updatedNotes = [newNote, ...notes];
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+    setInputText('');
+    Keyboard.dismiss();
+  };
+
+  const handleDeleteNote = (id) => {
+    const filteredNotes = notes.filter((note) => note.id !== id);
+    setNotes(filteredNotes);
+    saveNotes(filteredNotes);
+  };
+
+  const renderNoteItem = ({ item }) => (
+    <View style={styles.noteCard}>
+      <View style={styles.noteContent}>
+        <Text style={styles.noteText}>{item.text}</Text>
+        <Text style={styles.noteDate}>{item.date}</Text>
+      </View>
+      <TouchableOpacity 
+        style={styles.deleteButton} 
+        onPress={() => handleDeleteNote(item.id)}
+      >
+        <Text style={styles.deleteButtonText}>Sil</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+        style={styles.flex}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Not Defterim</Text>
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Yeni bir not yazın..."
+            value={inputText}
+            onChangeText={setInputText}
+            multiline
+          />
+          <TouchableOpacity style={styles.addButton} onPress={handleAddNote}>
+            <Text style={styles.addButtonText}>Ekle</Text>
+          </TouchableOpacity>
+        </View>
+
+        <FlatList
+          data={notes}
+          renderItem={renderNoteItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Henüz hiç not eklemediniz.</Text>
+          }
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+  flex: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    backgroundColor: '#4A90E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  inputContainer: {
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    maxHeight: 100,
+  },
+  addButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  noteCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderLeftWidth: 5,
+    borderLeftColor: '#4A90E2',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  noteContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+  noteText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  noteDate: {
+    fontSize: 12,
+    color: '#999',
+  },
+  deleteButton: {
+    backgroundColor: '#FF5252',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+    color: '#AAA',
+    fontStyle: 'italic',
+  },
+});
