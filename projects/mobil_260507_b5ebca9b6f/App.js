@@ -10,15 +10,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  Alert
+  Alert,
+  Modal,
+  Switch,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
   const [notes, setNotes] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [editingNote, setEditingNote] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // Uygulama başladığında notları yükle
   useEffect(() => {
     loadNotes();
   }, []);
@@ -53,6 +58,7 @@ export default function App() {
       id: Date.now().toString(),
       text: trimmedText,
       date: new Date().toLocaleString(),
+      completed: false,
     };
 
     const updatedNotes = [newNote, ...notes];
@@ -68,29 +74,93 @@ export default function App() {
     saveNotes(filteredNotes);
   };
 
+  const handleToggleComplete = (id) => {
+    const updatedNotes = notes.map((note) =>
+      note.id === id ? { ...note, completed: !note.completed } : note
+    );
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+  };
+
+  const handleEditNote = (note) => {
+    setEditingNote(note);
+    setEditText(note.text);
+    setModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    const trimmedText = editText.trim();
+    if (trimmedText === '') {
+      Alert.alert('Uyarı', 'Not boş olamaz.');
+      return;
+    }
+
+    const updatedNotes = notes.map((note) =>
+      note.id === editingNote.id
+        ? { ...note, text: trimmedText, date: new Date().toLocaleString() + ' (düzenlendi)' }
+        : note
+    );
+    setNotes(updatedNotes);
+    saveNotes(updatedNotes);
+    setModalVisible(false);
+    setEditingNote(null);
+    setEditText('');
+  };
+
+  const filteredNotes = notes.filter((note) =>
+    note.text.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderNoteItem = ({ item }) => (
-    <View style={styles.noteCard}>
+    <View style={[styles.noteCard, item.completed && styles.completedCard]}>
       <View style={styles.noteContent}>
-        <Text style={styles.noteText}>{item.text}</Text>
+        <View style={styles.noteHeader}>
+          <Switch
+            value={item.completed}
+            onValueChange={() => handleToggleComplete(item.id)}
+            trackColor={{ false: '#767577', true: '#81b0ff' }}
+            thumbColor={item.completed ? '#4A90E2' : '#f4f3f4'}
+          />
+          <Text style={[styles.noteText, item.completed && styles.completedText]}>
+            {item.text}
+          </Text>
+        </View>
         <Text style={styles.noteDate}>{item.date}</Text>
       </View>
-      <TouchableOpacity 
-        style={styles.deleteButton} 
-        onPress={() => handleDeleteNote(item.id)}
-      >
-        <Text style={styles.deleteButtonText}>Sil</Text>
-      </TouchableOpacity>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => handleEditNote(item)}
+        >
+          <Text style={styles.actionButtonText}>Düzenle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteNote(item.id)}
+        >
+          <Text style={styles.actionButtonText}>Sil</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Not Defterim</Text>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Not ara..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
 
         <View style={styles.inputContainer}>
@@ -107,14 +177,50 @@ export default function App() {
         </View>
 
         <FlatList
-          data={notes}
+          data={filteredNotes}
           renderItem={renderNoteItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Henüz hiç not eklemediniz.</Text>
+            <Text style={styles.emptyText}>
+              {searchQuery ? 'Aramanızla eşleşen not yok.' : 'Henüz hiç not eklemediniz.'}
+            </Text>
           }
         />
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Notu Düzenle</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={editText}
+                onChangeText={setEditText}
+                multiline
+                autoFocus
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>İptal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={handleSaveEdit}
+                >
+                  <Text style={styles.modalButtonText}>Kaydet</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -144,11 +250,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 5,
+  },
+  searchInput: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
   inputContainer: {
     padding: 20,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 10,
   },
   input: {
     flex: 1,
@@ -160,6 +279,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDD',
     maxHeight: 100,
+    marginRight: 10,
   },
   addButton: {
     backgroundColor: '#4A90E2',
@@ -193,18 +313,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  completedCard: {
+    borderLeftColor: '#81C784',
+    opacity: 0.8,
+  },
   noteContent: {
     flex: 1,
     marginRight: 10,
   },
+  noteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   noteText: {
     fontSize: 16,
     color: '#333',
-    marginBottom: 5,
+    flex: 1,
+    marginLeft: 10,
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    color: '#999',
   },
   noteDate: {
     fontSize: 12,
     color: '#999',
+    marginLeft: 10,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#FFA726',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginRight: 8,
   },
   deleteButton: {
     backgroundColor: '#FF5252',
@@ -212,7 +358,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  deleteButtonText: {
+  actionButtonText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: 'bold',
@@ -223,5 +369,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#AAA',
     fontStyle: 'italic',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '85%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalInput: {
+    backgroundColor: '#F5F7FB',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 20,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#CCC',
+  },
+  saveButton: {
+    backgroundColor: '#4A90E2',
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
