@@ -37,14 +37,14 @@ const App = () => {
     }
   };
 
-  const saveNotes = async (updatedNotes) => {
+  const saveNotes = useCallback(async (updatedNotes) => {
     try {
       await AsyncStorage.setItem('notes', JSON.stringify(updatedNotes));
       setNotes(updatedNotes);
     } catch (e) {
       Alert.alert('Hata', 'Notlar kaydedilemedi');
     }
-  };
+  }, []);
 
   const addNote = () => {
     if (!title.trim() || !content.trim()) {
