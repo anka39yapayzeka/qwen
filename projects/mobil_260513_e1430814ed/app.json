@@ -1,0 +1,14 @@
+{
+    "expo": {
+        "name": "Anka Mobil mobil_260513_e1430814ed",
+        "slug": "anka-mobil-mobil_260513_e1430814ed",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "platforms": [
+            "android"
+        ],
+        "android": {
+            "package": "com.anka39.mobil_260513_e1430814ed"
+        }
+    }
+}
