@@ -1,197 +1,163 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-
-const cityData = {
-  'İstanbul': {
-    current: { temp: 18, desc: 'Parçalı Bulutlu', icon: '⛅' },
-    forecast: [
-      { day: 'Salı', temp: 19, icon: '☀️' },
-      { day: 'Çarşamba', temp: 17, icon: '☁️' },
-      { day: 'Perşembe', temp: 16, icon: '🌧️' },
-      { day: 'Cuma', temp: 20, icon: '⛅' },
-      { day: 'Cumartesi', temp: 22, icon: '☀️' }
-    ]
-  },
-  'Ankara': {
-    current: { temp: 15, desc: 'Az Bulutlu', icon: '🌤️' },
-    forecast: [
-      { day: 'Salı', temp: 14, icon: '☁️' },
-      { day: 'Çarşamba', temp: 13, icon: '🌧️' },
-      { day: 'Perşembe', temp: 12, icon: '🌧️' },
-      { day: 'Cuma', temp: 16, icon: '⛅' },
-      { day: 'Cumartesi', temp: 18, icon: '☀️' }
-    ]
-  },
-  'İzmir': {
-    current: { temp: 22, desc: 'Açık', icon: '☀️' },
-    forecast: [
-      { day: 'Salı', temp: 23, icon: '☀️' },
-      { day: 'Çarşamba', temp: 21, icon: '⛅' },
-      { day: 'Perşembe', temp: 20, icon: '☁️' },
-      { day: 'Cuma', temp: 24, icon: '☀️' },
-      { day: 'Cumartesi', temp: 25, icon: '☀️' }
-    ]
-  },
-  'Antalya': {
-    current: { temp: 24, desc: 'Güneşli', icon: '☀️' },
-    forecast: [
-      { day: 'Salı', temp: 25, icon: '☀️' },
-      { day: 'Çarşamba', temp: 23, icon: '⛅' },
-      { day: 'Perşembe', temp: 22, icon: '☁️' },
-      { day: 'Cuma', temp: 26, icon: '☀️' },
-      { day: 'Cumartesi', temp: 27, icon: '☀️' }
-    ]
-  },
-  'Bursa': {
-    current: { temp: 16, desc: 'Yağmurlu', icon: '🌧️' },
-    forecast: [
-      { day: 'Salı', temp: 15, icon: '🌧️' },
-      { day: 'Çarşamba', temp: 14, icon: '🌧️' },
-      { day: 'Perşembe', temp: 13, icon: '🌧️' },
-      { day: 'Cuma', temp: 17, icon: '⛅' },
-      { day: 'Cumartesi', temp: 19, icon: '☀️' }
-    ]
-  }
-};
-
-const cities = Object.keys(cityData);
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, PermissionsAndroid, Platform } from 'react-native';
+import { BarCodeScanner } from 'expo-barcode-scanner';
 
 export default function App() {
-  const [selectedCity, setSelectedCity] = useState(cities[0]);
-  const city = cityData[selectedCity];
+  const [hasPermission, setHasPermission] = useState(null);
+  const [scanned, setScanned] = useState(false);
+  const [result, setResult] = useState('Hiçbir kod okunamadı.');
+  const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+  const scannerRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+      const { status: camStatus } = await BarCodeScanner.requestCameraPermissionsAsync?.() ?? { status: 'granted' };
+      setHasCameraPermission(camStatus === 'granted');
+    })();
+  }, []);
+
+  const handleBarCodeScanned = ({ type, data }) => {
+    setScanned(true);
+    setResult(`Okunan Metin: ${data}`);
+  };
+
+  const askCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Kamera İzni Gerekli',
+          message: 'QR kod okumak için kamera izni gereklidir.',
+          buttonNeutral: 'Daha Sonra Sor',
+          buttonNegative: 'İptal',
+          buttonPositive: 'Tamam',
+        }
+      );
+      setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
+    } else {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    }
+  };
+
+  if (hasPermission === null) {
+    return (
+      <View style={styles.container}>
+        <Text>Kamera izni yükleniyor...</Text>
+        <TouchableOpacity style={styles.button} onPress={askCameraPermission}>
+          <Text>İzin Ver</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  if (hasPermission === false) {
+    return (
+      <View style={styles.container}>
+        <Text>Kamera erişimi reddedildi. Lütfen ayarlardan izni verin.</Text>
+        <TouchableOpacity style={styles.button} onPress={askCameraPermission}>
+          <Text>Tekrar Denet</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      <Text style={styles.title}>Hava Durumu</Text>
-      <View style={styles.citySelector}>
-        {cities.map(c => (
-          <TouchableOpacity
-            key={c}
-            style={[styles.cityButton, selectedCity === c && styles.cityButtonActive]}
-            onPress={() => setSelectedCity(c)}
-          >
-            <Text style={[styles.cityButtonText, selectedCity === c && styles.cityButtonTextActive]}>
-              {c}
-            </Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>QR Okuyucu</Text>
+      </View>
+      {showPlaceholder ? (
+        <View style={styles.placeholderContainer}>
+          <Text style={styles.placeholderText}>Kamera önizlemesi burada görünecek</Text>
+          <TouchableOpacity style={styles.scanButton} onPress={() => setShowPlaceholder(false)}>
+            <Text>Tara Başlat</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-      <View style={styles.currentContainer}>
-        <Text style={styles.cityName}>{selectedCity}</Text>
-        <Text style={styles.currentTemp}>{city.current.temp}°C</Text>
-        <Text style={styles.currentIcon}>{city.current.icon}</Text>
-        <Text style={styles.currentDesc}>{city.current.desc}</Text>
-      </View>
-      <Text style={styles.forecastTitle}>5 Günlük Tahmin</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.forecastContainer}>
-        {city.forecast.map((day, index) => (
-          <View key={index} style={styles.forecastDay}>
-            <Text style={styles.forecastDayText}>{day.day}</Text>
-            <Text style={styles.forecastIcon}>{day.icon}</Text>
-            <Text style={styles.forecastTemp}>{day.temp}°C</Text>
+        </View>
+      ) : (
+        <BarCodeScanner
+          ref={scannerRef}
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+          style={StyleSheet.absoluteFillObject}
+        >
+          <View style={styles.overlay}>
+            <View style={styles.focusBox} />
+            <TouchableOpacity style={styles.captureButton} onPress={() => setScanned(false)}>
+              <Text>✕ Yeniden Tara</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+        </BarCodeScanner>
+      )}
+      <View style={styles.footer}>
+        <Text style={styles.resultText}>{result}</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'space-between',
+  },
+  header: {
+    padding: 20,
+    alignItems: 'center',
     backgroundColor: '#1a1a2e',
-    paddingTop: 40,
-    paddingHorizontal: 16,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  citySelector: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  cityButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: '#16213e',
-    margin: 5,
-  },
-  cityButtonActive: {
-    backgroundColor: '#e94560',
-  },
-  cityButtonText: {
-    color: '#a7a9be',
-    fontSize: 16,
-  },
-  cityButtonTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  currentContainer: {
-    alignItems: 'center',
-    backgroundColor: '#16213e',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 30,
-  },
-  cityName: {
     fontSize: 24,
-    color: '#fff',
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  currentTemp: {
-    fontSize: 64,
     fontWeight: 'bold',
     color: '#fff',
   },
-  currentIcon: {
-    fontSize: 50,
-    marginVertical: 5,
-  },
-  currentDesc: {
-    fontSize: 18,
-    color: '#a7a9be',
-  },
-  forecastTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 15,
-    marginLeft: 5,
-  },
-  forecastContainer: {
-    flexDirection: 'row',
-  },
-  forecastDay: {
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#16213e',
-    borderRadius: 12,
-    padding: 15,
-    marginRight: 10,
-    minWidth: 80,
   },
-  forecastDayText: {
-    fontSize: 16,
+  placeholderText: {
     color: '#a7a9be',
-    marginBottom: 8,
+    fontSize: 18,
+    marginBottom: 20,
   },
-  forecastIcon: {
-    fontSize: 30,
-    marginBottom: 8,
+  scanButton: {
+    backgroundColor: '#e94560',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
   },
-  forecastTemp: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  focusBox: {
+    width: 200,
+    height: 200,
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 10,
+  },
+  captureButton: {
+    marginTop: 20,
+    backgroundColor: '#16213e',
+    padding: 10,
+    borderRadius: 8,
+  },
+  footer: {
+    padding: 15,
+    backgroundColor: '#1a1a2e',
+    borderTopWidth: 1,
+    borderTopColor: '#333',
+  },
+  resultText: {
     color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
