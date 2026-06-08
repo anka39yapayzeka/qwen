@@ -239,8 +239,8 @@ export default function App() {
       if (data) {
         setWeather(data);
         setRecentSearches((prev) => {
-          const filtered = prev.filter((item) => item !== data.city);
-          return [data.city, ...filtered].slice(0, 5);
+          const filtered = prev.filter((item) => item!== data.city);
+          return [data.city,...filtered].slice(0, 5);
         });
       } else {
         setError('Şehir bulunamadı. İstanbul, Ankara, İzmir, Antalya veya Bursa deneyin.');
@@ -273,7 +273,7 @@ export default function App() {
   };
 
   const toggleUnit = () => {
-    setUnit((prev) => (prev === 'C' ? 'F' : 'C'));
+    setUnit((prev) => (prev === 'C'? 'F' : 'C'));
   };
 
   const getBackgroundGradient = () => {
@@ -306,7 +306,6 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#E3F2FD" />
-
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -314,12 +313,11 @@ export default function App() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>🌤️ Hava Durumu</Text>
+          <Text style={styles.title}>Hava Durumu</Text>
           <TouchableOpacity style={styles.unitButton} onPress={toggleUnit}>
             <Text style={styles.unitButtonText}>°{unit}</Text>
           </TouchableOpacity>
         </View>
-
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.input}
@@ -333,11 +331,9 @@ export default function App() {
             <Text style={styles.searchButtonText}>🔍</Text>
           </TouchableOpacity>
         </View>
-
         <TouchableOpacity style={styles.citySelectorButton} onPress={() => setShowCityModal(true)}>
-          <Text style={styles.citySelectorText}>📍 Popüler Şehirler</Text>
+          <Text style={styles.citySelectorText}>Popüler Şehirler</Text>
         </TouchableOpacity>
-
         {recentSearches.length > 0 && (
           <View style={styles.recentContainer}>
             <Text style={styles.recentTitle}>Son Aramalar</Text>
@@ -357,22 +353,19 @@ export default function App() {
             </ScrollView>
           </View>
         )}
-
-        {error ? (
+        {error? (
           <Animated.View style={[styles.errorContainer, { opacity: fadeAnim }]}>
             <Text style={styles.errorIcon}>⚠️</Text>
             <Text style={styles.errorText}>{error}</Text>
           </Animated.View>
         ) : null}
-
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#4A90E2" />
             <Text style={styles.loadingText}>Hava durumu bilgisi alınıyor...</Text>
           </View>
         )}
-
-        {weather && !loading && (
+        {weather &&!loading && (
           <Animated.View
             style={[
               styles.weatherContainer,
@@ -393,7 +386,6 @@ export default function App() {
                   })}
                 </Text>
               </View>
-
               <View style={styles.mainWeatherInfo}>
                 <Text style={styles.icon}>{weather.icon}</Text>
                 <Text style={styles.temperature}>{convertTemp(weather.temperature)}°{unit}</Text>
@@ -403,7 +395,6 @@ export default function App() {
                 </Text>
               </View>
             </View>
-
             <View style={styles.detailsGrid}>
               <View style={styles.detailCard}>
                 <Text style={styles.detailIcon}>💧</Text>
@@ -436,7 +427,6 @@ export default function App() {
                 <Text style={styles.detailValue}>{weather.sunrise}</Text>
               </View>
             </View>
-
             <View style={styles.sunTimesContainer}>
               <View style={styles.sunTimeItem}>
                 <Text style={styles.sunIcon}>🌅</Text>
@@ -449,9 +439,8 @@ export default function App() {
                 <Text style={styles.sunValue}>{weather.sunset}</Text>
               </View>
             </View>
-
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>⏰ Saatlik Tahmin</Text>
+              <Text style={styles.sectionTitle}>Saatlik Tahmin</Text>
               <FlatList
                 data={weather.hourly}
                 renderItem={renderHourlyItem}
@@ -461,16 +450,14 @@ export default function App() {
                 contentContainerStyle={styles.hourlyList}
               />
             </View>
-
             <TouchableOpacity
               style={styles.forecastToggle}
               onPress={() => setShowForecast(!showForecast)}
             >
               <Text style={styles.forecastToggleText}>
-                {showForecast ? '📅 5 Günlük Tahmin (Gizle)' : '📅 5 Günlük Tahmin (Göster)'}
+                {showForecast? '5 Günlük Tahmin (Gizle)' : '5 Günlük Tahmin (Göster)'}
               </Text>
             </TouchableOpacity>
-
             {showForecast && (
               <View style={styles.forecastContainer}>
                 <FlatList
@@ -482,14 +469,12 @@ export default function App() {
             )}
           </Animated.View>
         )}
-
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             Demo uygulaması - Gerçek API entegrasyonu için API anahtarı gerekli
           </Text>
         </View>
       </ScrollView>
-
       <Modal
         visible={showCityModal}
         animationType="slide"
@@ -512,7 +497,7 @@ export default function App() {
               >
                 <Text style={styles.modalCityName}>{item.name}</Text>
                 <Text style={styles.mockDataIndicator}>
-                  {mockWeatherData[item.key] ? '✅' : '❌'}
+                  {mockWeatherData[item.key]? '✅' : '❌'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -529,7 +514,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3F2FD',
   },
   scrollContent: {
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
+    paddingTop: Platform.OS === 'ios'? 50 : StatusBar.currentHeight + 10,
     paddingHorizontal: 20,
     paddingBottom: 30,
   },
@@ -908,4 +893,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-```
