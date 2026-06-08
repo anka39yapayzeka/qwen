@@ -58,4 +58,19 @@ const App = () => {
   };
 
   const buttons = [
-    ['Temizle', 'Bölü', 'C
+    ['Temizle', 'Bölü', 'Carpı', 'Eksi'],
+    ['7', '8', '9', 'Arti'],
+    ['4', '5', '6', 'Esittir'],
+    ['1', '2', '3', '0']
+  ];
+
+  const handlePress = (label) => {
+    if (label === 'Temizle') {
+      handleClear();
+    } else if (label === 'Arti' || label === 'Eksi' || label === 'Carpı' || label === 'Bölü') {
+      const opMap = { 'Arti': '+', 'Eksi': '-', 'Carpı': '*', 'Bölü': '/' };
+      handleOperator(opMap[label]);
+    } else if (label === 'Esittir') {
+      handleEqual();
+    } else {
+      handleNumber(parseInt(label, 10
