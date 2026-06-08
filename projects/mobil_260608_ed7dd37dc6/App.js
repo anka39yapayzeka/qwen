@@ -65,3 +65,50 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  scoreBoard: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  score: {
+    fontSize: 20,
+    marginHorizontal: 20,
+  },
+  choiceDisplay: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  choiceText: {
+    fontSize: 18,
+    marginVertical: 5,
+  },
+  resultText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginTop: 10,
+  },
+  buttons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  button: {
+    backgroundColor: '#3498db',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
