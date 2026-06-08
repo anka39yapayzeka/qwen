@@ -40,3 +40,28 @@ export default function App() {
         <Text style={styles.score}>Sen: {userScore}</Text>
         <Text style={styles.score}>Bilgisayar: {computerScore}</Text>
       </View>
+
+      {userChoice && (
+        <View style={styles.choiceDisplay}>
+          <Text style={styles.choiceText}>Sen: {userChoice}</Text>
+          <Text style={styles.choiceText}>Bilgisayar: {computerChoice}</Text>
+          <Text style={styles.resultText}>{result}</Text>
+        </View>
+      )}
+
+      <View style={styles.buttons}>
+        {choices.map((choice) => (
+          <TouchableOpacity key={choice} style={styles.button} onPress={() => handleChoice(choice)}>
+            <Text style={styles.buttonText}>{choice}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
