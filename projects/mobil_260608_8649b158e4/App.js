@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 
-const API_KEY = 'demo_key'; // Gerçek bir API anahtarı kullanılmalıdır
+const API_KEY = 'demo_key';
 
 const mockWeatherData = {
   istanbul: {
@@ -46,7 +46,6 @@ export default function App() {
     setError('');
 
     try {
-      // Simüle edilmiş API çağrısı
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const cityKey = cityName.toLowerCase().trim();
@@ -82,16 +81,17 @@ export default function App() {
           onChangeText={setCity}
           onSubmitEditing={handleSearch}
         />
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={handleSearch}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Aranıyor...' : 'Ara'}
-          </Text>
-        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={handleSearch}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Aranıyor...' : 'Ara'}
+        </Text>
+      </TouchableOpacity>
 
       {error ? (
         <View style={styles.errorContainer}>
@@ -152,12 +152,9 @@ const styles = StyleSheet.create({
     color: '#1565C0',
   },
   searchContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    gap: 10,
+    marginBottom: 15,
   },
   input: {
-    flex: 1,
     height: 50,
     borderWidth: 1,
     borderColor: '#BBDEFB',
@@ -168,12 +165,11 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#4A90E2',
-    paddingHorizontal: 20,
     paddingVertical: 15,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 80,
+    marginBottom: 20,
   },
   buttonText: {
     color: 'white',
