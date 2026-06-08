@@ -32,4 +32,30 @@ const App = () => {
   const handleEqual = useCallback(() => {
     const current = parseFloat(display);
     if (operator && firstOperand !== null) {
-      const
+      const result = compute(firstOperand, current, operator);
+      setDisplay(String(result));
+      setFirstOperand(null);
+      setOperator(null);
+      setWaitingForSecond(false);
+    }
+  }, [display, firstOperand, operator]);
+
+  const handleClear = useCallback(() => {
+    setDisplay('0');
+    setFirstOperand(null);
+    setOperator(null);
+    setWaitingForSecond(false);
+  }, []);
+
+  const compute = (a, b, op) => {
+    switch (op) {
+      case '+': return a + b;
+      case '-': return a - b;
+      case '*': return a * b;
+      case '/': return b !== 0 ? a / b : 'Hata';
+      default: return b;
+    }
+  };
+
+  const buttons = [
+    ['Temizle', 'Bölü', 'C
