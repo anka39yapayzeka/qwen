@@ -234,3 +234,79 @@ const styles = StyleSheet.create({
 export default App;
 
 [Devam ediliyor…]
+container: {
+    flex: 1,
+    backgroundColor: '#222',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  displayContainer: {
+    backgroundColor: '#000',
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  displayText: {
+    color: '#0f0',
+    fontSize: 48,
+    textAlign: 'right',
+  },
+  buttonGrid: {
+    flexDirection: 'column',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 4,
+    paddingVertical: 20,
+    backgroundColor: '#444',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 24,
+  },
+  numberButton: {
+    backgroundColor: '#333',
+  },
+  numberText: {
+    color: '#fff',
+  },
+  operatorButton: {
+    backgroundColor: '#ff9500',
+  },
+  operatorText: {
+    color: '#fff',
+  },
+  equalsButton: {
+    backgroundColor: '#34c759',
+  },
+  equalsText: {
+    color: '#fff',
+  },
+  clearButton: {
+    backgroundColor: '#ff3b30',
+  },
+  clearText: {
+    color: '#fff',
+  },
+  backspaceButton: {
+    backgroundColor: '#8e8e93',
+  },
+  backspaceText: {
+    color: '#fff',
+  },
+  decimalButton: {
+    backgroundColor: '#333',
+  },
+  decimalText: {
+    color: '#fff',
+  },
+});
+
+export default App;
