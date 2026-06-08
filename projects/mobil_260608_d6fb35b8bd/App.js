@@ -104,3 +104,44 @@ const App = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#202020',
+    justifyContent: 'flex-end',
+    padding: 10,
+  },
+  displayContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  displayText: {
+    color: '#fff',
+    fontSize: 48,
+    fontWeight: '300',
+  },
+  buttonContainer: {
+    paddingBottom: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: '#333',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '500',
+  },
+});
+
+export default App;
