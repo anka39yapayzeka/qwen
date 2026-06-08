@@ -84,3 +84,27 @@ const App = () => {
   return (
     <View style={styles.container}>
       <View style={styles.displayContainer}>
+        <Text style={styles.displayText}>{display}</Text>
+      </View>
+      <View style={styles.buttonGrid}>
+        {buttonRows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {row.map((label) => {
+              const isNumber = /^[0-9]$/.test(label);
+              const isEquals = label === '=';
+              const isOperator = ['+', '-', '×', '÷'].includes(label);
+              const isClear = label === 'C';
+              const isBackspace = label === '⌫';
+              const isDecimal = label === '.';
+              let buttonStyle = styles.button;
+              let textStyle = styles.buttonText;
+              if (isNumber) {
+                buttonStyle = styles.numberButton;
+                textStyle = styles.numberText;
+              } else if (isEquals) {
+                buttonStyle = styles.equalsButton;
+                textStyle = styles.equalsText;
+              } else if (isOperator) {
+                buttonStyle = styles.operatorButton;
+                textStyle = styles.operatorText;
+              } else if (isClear || isBackspace) {
