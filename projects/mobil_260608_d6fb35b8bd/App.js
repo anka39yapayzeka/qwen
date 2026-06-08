@@ -73,4 +73,34 @@ const App = () => {
     } else if (label === 'Esittir') {
       handleEqual();
     } else {
-      handleNumber(parseInt(label, 10
+      handleNumber(parseInt(label, 10));
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.displayContainer}>
+        <Text style={styles.displayText}>{display}</Text>
+      </View>
+      <View style={styles.buttonContainer}>
+        {buttons.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {row.map((label, colIndex) => (
+              <TouchableOpacity
+                key={colIndex}
+                style={styles.button}
+                onPress={() => handlePress(label)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.buttonText}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
