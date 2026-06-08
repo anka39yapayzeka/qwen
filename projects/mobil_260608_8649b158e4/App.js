@@ -396,4 +396,516 @@ export default function App() {
 
               <View style={styles.mainWeatherInfo}>
                 <Text style={styles.icon}>{weather.icon}</Text>
-                <Text style={styles.temperature}>{convertTemp(weather.t
+                <Text style={styles.temperature}>{convertTemp(weather.temperature)}°{unit}</Text>
+                <Text style={styles.description}>{weather.description}</Text>
+                <Text style={styles.feelsLike}>
+                  Hissedilen: {convertTemp(weather.feelsLike)}°{unit}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>💧</Text>
+                <Text style={styles.detailLabel}>Nem</Text>
+                <Text style={styles.detailValue}>{weather.humidity}%</Text>
+              </View>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>💨</Text>
+                <Text style={styles.detailLabel}>Rüzgar</Text>
+                <Text style={styles.detailValue}>{weather.windSpeed} km/s</Text>
+              </View>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>🌡️</Text>
+                <Text style={styles.detailLabel}>Basınç</Text>
+                <Text style={styles.detailValue}>{weather.pressure} hPa</Text>
+              </View>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>👁️</Text>
+                <Text style={styles.detailLabel}>Görüş</Text>
+                <Text style={styles.detailValue}>{weather.visibility} km</Text>
+              </View>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>☀️</Text>
+                <Text style={styles.detailLabel}>UV İndeks</Text>
+                <Text style={styles.detailValue}>{weather.uvIndex}</Text>
+              </View>
+              <View style={styles.detailCard}>
+                <Text style={styles.detailIcon}>🌅</Text>
+                <Text style={styles.detailLabel}>Gündoğumu</Text>
+                <Text style={styles.detailValue}>{weather.sunrise}</Text>
+              </View>
+            </View>
+
+            <View style={styles.sunTimesContainer}>
+              <View style={styles.sunTimeItem}>
+                <Text style={styles.sunIcon}>🌅</Text>
+                <Text style={styles.sunLabel}>Gündoğumu</Text>
+                <Text style={styles.sunValue}>{weather.sunrise}</Text>
+              </View>
+              <View style={styles.sunTimeItem}>
+                <Text style={styles.sunIcon}>🌇</Text>
+                <Text style={styles.sunLabel}>Günbatımı</Text>
+                <Text style={styles.sunValue}>{weather.sunset}</Text>
+              </View>
+            </View>
+
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>⏰ Saatlik Tahmin</Text>
+              <FlatList
+                data={weather.hourly}
+                renderItem={renderHourlyItem}
+                keyExtractor={(item, index) => index.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.hourlyList}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.forecastToggle}
+              onPress={() => setShowForecast(!showForecast)}
+            >
+              <Text style={styles.forecastToggleText}>
+                {showForecast ? '📅 5 Günlük Tahmin (Gizle)' : '📅 5 Günlük Tahmin (Göster)'}
+              </Text>
+            </TouchableOpacity>
+
+            {showForecast && (
+              <View style={styles.forecastContainer}>
+                <FlatList
+                  data={weather.forecast}
+                  renderItem={renderForecastItem}
+                  keyExtractor={(item, index) => index.toString()}
+                />
+              </View>
+            )}
+          </Animated.View>
+        )}
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Demo uygulaması - Gerçek API entegrasyonu için API anahtarı gerekli
+          </Text>
+        </View>
+      </ScrollView>
+
+      <Modal
+        visible={showCityModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCityModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Şehir Seçin</Text>
+              <TouchableOpacity onPress={() => setShowCityModal(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {popularCities.map((item) => (
+              <TouchableOpacity
+                key={item.key}
+                style={styles.modalCityItem}
+                onPress={() => handleCitySelect(item.key, item.name)}
+              >
+                <Text style={styles.modalCityName}>{item.name}</Text>
+                <Text style={styles.mockDataIndicator}>
+                  {mockWeatherData[item.key] ? '✅' : '❌'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E3F2FD',
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight + 10,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  unitButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  unitButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    gap: 10,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    borderWidth: 2,
+    borderColor: '#BBDEFB',
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    backgroundColor: 'white',
+    fontSize: 16,
+  },
+  searchButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: '#4A90E2',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchButtonText: {
+    fontSize: 20,
+  },
+  citySelectorButton: {
+    backgroundColor: 'white',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  citySelectorText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  recentContainer: {
+    marginBottom: 15,
+  },
+  recentTitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  recentItem: {
+    backgroundColor: 'white',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  recentItemText: {
+    fontSize: 14,
+    color: '#4A90E2',
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F44336',
+    alignItems: 'center',
+  },
+  errorIcon: {
+    fontSize: 30,
+    marginBottom: 10,
+  },
+  errorText: {
+    color: '#C62828',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginVertical: 40,
+  },
+  loadingText: {
+    marginTop: 15,
+    color: '#666',
+    fontSize: 14,
+  },
+  weatherContainer: {
+    marginBottom: 20,
+  },
+  mainWeatherCard: {
+    backgroundColor: 'white',
+    borderRadius: 25,
+    padding: 25,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  cityHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cityName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  currentDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  mainWeatherInfo: {
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: 80,
+    marginVertical: 10,
+  },
+  temperature: {
+    fontSize: 56,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  description: {
+    fontSize: 20,
+    color: '#666',
+    marginTop: 5,
+  },
+  feelsLike: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 5,
+  },
+  detailsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    gap: 10,
+  },
+  detailCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    width: (width - 60) / 3,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  detailIcon: {
+    fontSize: 24,
+    marginBottom: 5,
+  },
+  detailLabel: {
+    fontSize: 11,
+    color: '#666',
+    textAlign: 'center',
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginTop: 3,
+  },
+  sunTimesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  sunTimeItem: {
+    alignItems: 'center',
+  },
+  sunIcon: {
+    fontSize: 30,
+    marginBottom: 5,
+  },
+  sunLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  sunValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginTop: 3,
+  },
+  sectionContainer: {
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    marginBottom: 10,
+  },
+  hourlyList: {
+    paddingRight: 20,
+  },
+  hourlyItem: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    marginRight: 10,
+    alignItems: 'center',
+    width: 70,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  hourlyTime: {
+    fontSize: 12,
+    color: '#666',
+  },
+  hourlyIcon: {
+    fontSize: 24,
+    marginVertical: 5,
+  },
+  hourlyTemp: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  forecastToggle: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  forecastToggleText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  forecastContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  forecastItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  forecastDay: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    width: 40,
+  },
+  forecastIcon: {
+    fontSize: 28,
+    flex: 1,
+    textAlign: 'center',
+  },
+  forecastTemps: {
+    flexDirection: 'row',
+    gap: 10,
+    width: 80,
+    justifyContent: 'flex-end',
+  },
+  forecastHigh: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  forecastLow: {
+    fontSize: 16,
+    color: '#999',
+  },
+  footer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    maxHeight: height * 0.6,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  modalClose: {
+    fontSize: 24,
+    color: '#666',
+    padding: 5,
+  },
+  modalCityItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  modalCityName: {
+    fontSize: 18,
+    color: '#333',
+  },
+  mockDataIndicator: {
+    fontSize: 16,
+  },
+});
+```
