@@ -384,4 +384,52 @@ const styles = StyleSheet.create({
   button: {
     width: 70,
     height: 70,
-    borderRadius: 35
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  incrementButton: {
+    backgroundColor: '#03DAC6',
+  },
+  decrementButton: {
+    backgroundColor: '#FF0266',
+  },
+  resetButton: {
+    backgroundColor: 'transparent',
+    width: 'auto',
+    height: 'auto',
+    padding: 10,
+  },
+  buttonText: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#121212',
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  historyContainer: {
+    width: '100%',
+    backgroundColor: '#1E1E1E',
+    padding: 15,
+    borderRadius: 10,
+    minHeight: 100,
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  emptyHistory: {
+    color: '#888888',
+    fontStyle: 'italic',
+  },
+  historyItem: {
+    color: '#CCCCCC',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+});
