@@ -253,3 +253,9 @@ export default function App() {
                 <Text style={[styles.stepButtonText, step === s && styles.activeStepButtonText]}>{s}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        <View style={[styles.counterCard, isNegative && styles.negativeCard]}>
+          <Text style={[styles.countText, isNegative && styles.negativeText]}>
+            {count}
