@@ -198,4 +198,190 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
   },
-});import
+});import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Vibration } from 'react-native';
+
+export default function App() {
+  const [count, setCount] = useState(0);
+  const [step, setStep] = useState(1);
+  const [history, setHistory] = useState([]);
+  const [isNegative, setIsNegative] = useState(false);
+
+  useEffect(() => {
+    setIsNegative(count < 0);
+  }, [count]);
+
+  const handleIncrement = () => {
+    const newCount = count + step;
+    setCount(newCount);
+    setHistory(prev => [{ id: Date.now(), value: newCount, action: `+${step}` }, ...prev].slice(0, 10));
+    Vibration.vibrate(20);
+  };
+
+  const handleDecrement = () => {
+    const newCount = count - step;
+    setCount(newCount);
+    setHistory(prev => [{ id: Date.now(), value: newCount, action: `-${step}` }, ...prev].slice(0, 10));
+    Vibration.vibrate(20);
+  };
+
+  const handleReset = () => {
+    setCount(0);
+    setHistory(prev => [{ id: Date.now(), value: 0, action: 'Sıfırlandı' }, ...prev].slice(0, 10));
+    Vibration.vibrate([10, 30, 10]);
+  };
+
+  const changeStep = (newStep) => {
+    setStep(newStep);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        <Text style={styles.headerTitle}>Sayaç Uygulaması</Text>
+        
+        <View style={styles.stepContainer}>
+          <Text style={styles.stepLabel}>Adım Seçimi: {step}</Text>
+          <View style={styles.stepButtonsRow}>
+            {[1, 5, 10, 25].map((s) => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.stepButton, step === s && styles.activeStepButton]}
+                onPress={() => changeStep(s)}
+              >
+                <Text style={[styles.stepButtonText, step === s && styles.activeStepButtonText]}>{s}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={[styles.counterCard, isNegative && styles.negativeCard]}>
+          <Text style={[styles.countText, isNegative && styles.negativeText]}>
+            {count}
+          </Text>
+          <Text style={styles.statusText}>
+            {isNegative ? 'Negatif Bölge' : 'Pozitif Bölge'}
+          </Text>
+        </View>
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={[styles.button, styles.decrementButton]} onPress={handleDecrement}>
+            <Text style={styles.buttonText}>-</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+            <Text style={styles.resetButtonText}>SIFIRLA</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.button, styles.incrementButton]} onPress={handleIncrement}>
+            <Text style={styles.buttonText}>+</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.historyContainer}>
+          <Text style={styles.historyTitle}>İşlem Geçmişi</Text>
+          {history.length === 0 ? (
+            <Text style={styles.emptyHistory}>Henüz işlem yapılmadı.</Text>
+          ) : (
+            history.map((item) => (
+              <Text key={item.id} style={styles.historyItem}>
+                Değer: {item.value} (İşlem: {item.action})
+              </Text>
+            ))
+          )}
+        </View>
+
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 40,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 30,
+  },
+  stepContainer: {
+    width: '100%',
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  stepLabel: {
+    color: '#AAAAAA',
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  stepButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  stepButton: {
+    backgroundColor: '#2C2C2C',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+  },
+  activeStepButton: {
+    backgroundColor: '#BB86FC',
+  },
+  stepButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  activeStepButtonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  counterCard: {
+    width: '100%',
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30,
+    borderWidth: 2,
+    borderColor: '#BB86FC',
+  },
+  negativeCard: {
+    borderColor: '#FF0266',
+  },
+  countText: {
+    fontSize: 80,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  negativeText: {
+    color: '#FF0266',
+  },
+  statusText: {
+    color: '#888888',
+    fontSize: 14,
+    marginTop: 10,
+    letterSpacing: 1,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 40,
+  },
+  button: {
+    width: 70,
+    height: 70,
+    borderRadius: 35
