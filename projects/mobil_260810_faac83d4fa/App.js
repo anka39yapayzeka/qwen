@@ -25,4 +25,28 @@ export default function App() {
     setCount(prev => prev - step);
     setHistory(prev => [...prev, `-${step} (Toplam: ${count - step})`]);
     triggerAnim();
-    Vibration.vibrate([0, 30, 30
+    Vibration.vibrate([0, 30, 30, 30]);
+  };
+
+  const reset = () => {
+    setCount(0);
+    setStep(1);
+    setHistory([]);
+    Vibration.vibrate(100);
+  };
+
+  const changeStep = () => {
+    setStep(prev => (prev === 1 ? 5 : prev === 5 ? 10 : 1));
+  };
+
+  useEffect(() => {
+    if (count === 100) {
+      Vibration.vibrate([0, 50, 50, 50, 50, 50]);
+    }
+  }, [count]);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Sayaç Uygulaması</Text>
+
+      <Animated.View style={[styles.counterBox, {
