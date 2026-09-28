@@ -1,0 +1,12 @@
+{
+    "expo": {
+        "name": "mobil_260928_edbbd2958c",
+        "slug": "mobil_260928_edbbd2958c",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "platforms": [
+            "ios",
+            "android"
+        ]
+    }
+}
